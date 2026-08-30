@@ -25,16 +25,16 @@ macro write fd, buf, length {
     syscall3 SYS_write, fd, buf, length 
 }
 
+segment readable writable
+registers rb 31 * 4 ; Each register is 32 bytes
+ram rb 65536        ; 64ko for the RAM
+
 segment readable executable
 entry start
 
-op_table:
-    dq halt
-    dq movi
-    dq movr
-
 start:
     mov r12, nano_code ; Instruction pointer
+    mov r13, registers ; Registers pointer
 
 fetch:
     movzx rbx, byte [r12]
@@ -47,26 +47,31 @@ fetch:
 movi:
     write STDOUT, movi_msg, movi_len
     ; rax = register number
-    mov rax, [r12]
+    movzx rax, byte [r12]
     inc r12
     ; rdi = Immediate value
-    mov rdi, [r12]
+    movzx rdi, word [r12]
     inc r12
     ; Offset to be aligned with 32 bits
     inc r12
+    ; Write
+    mov dword [r13 + rax * 4], edi
     ; exit rdi 
     jmp fetch
 
 movr:
     write STDOUT, movr_msg, movr_len
     ; rax = register in
-    mov rax, [r12]
+    movzx rax, byte [r12]
     inc r12
     ; rdi = register out
-    mov rdi, [r12]
+    movzx rdi, byte [r12]
     inc r12
     ; Offset to be aligned with 32 bits
     inc r12
+    ; Read and write
+    mov edx, dword [r13 + rdi * 4]
+    mov dword [r13 + rax * 4], edx
     ; exit rdi 
     jmp fetch 
 
@@ -76,9 +81,15 @@ unknown_instruction:
 
 halt:
     write STDOUT, halt_msg, halt_msg_len
-    exit [r12]
+    exit [r12] 
 
 segment readable
+
+op_table:
+    dq halt
+    dq movi
+    dq movr
+
 movi_msg: db 'Mov Immediate value', 10
 movi_len = $ - movi_msg
 
