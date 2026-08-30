@@ -1,3 +1,9 @@
+.section .bss
+.align 4
+buffer_size = 4096
+buffer:
+    .skip buffer_size 
+
 .section .text
 .global _start
 _start:
@@ -11,13 +17,14 @@ _start:
     b exit
 _start.argc_noerror:
 
-    add x1, sp, #16 // argv[1]
+    ldr x1, [sp, #16] // argv[1]
 
     // Try to open it
     mov x0, #-100
     mov x2, #0
     mov x3, #0
     mov x8, #56
+    svc #0
     mov x19, x0
 
     cmp x19, #0
@@ -27,8 +34,12 @@ _start.argc_noerror:
     b exit
 _start.file_found:
 
-    ldr x0, [x1]
-    bl puts
+    // Try to read it
+    mov x0, x19
+    adr x1, buffer
+    mov x2, buffer_size
+    mov x8, #63
+    svc #0
 
 exit:
     // Close the file
