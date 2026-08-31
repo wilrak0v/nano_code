@@ -82,6 +82,28 @@ movr:
     ; exit rdi 
     jmp fetch 
 
+op_add:
+    ; rax = register in
+    movzx rax, byte [r12]
+    cmp rax, number_registers
+    ja unknown_register
+    inc r12
+    ; rdi = register out 
+    movzx rdi, byte [r12]
+    cmp rdi, number_registers
+    ja unknown_register
+    inc r12
+    ; Offset to aligned with 32 bits
+    inc r12
+    ; Read
+    mov rsi, rax
+    mov eax, dword [r13 + rsi * 4]
+    mov edx, dword [r13 + rdi * 4]
+    ; Add
+    add eax, edx
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
 unknown_instruction:
     write STDOUT, unknown_msg, unknown_msg_len
     exit 69
@@ -95,7 +117,7 @@ halt:
     movzx rax, byte [r12]
     cmp rax, number_registers
     ja unknown_register
-    mov edi, dword [r13 + rax * 8]
+    mov edi, dword [r13 + rax * 4]
     exit rdi 
 
 segment readable
@@ -104,6 +126,7 @@ op_table:
     dq halt
     dq movi
     dq movr
+    dq op_add
 op_table_len = ($ - op_table) / 8 - 1 
 
 movi_msg: db 'Mov Immediate value', 10
@@ -124,9 +147,10 @@ unknown_register_msg_len = $ - unknown_register_msg
 halt_msg: db 'Halt', 10
 halt_msg_len = $ - halt_msg 
 
+; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    dd 0xFFFFFF01 ; movi r01, 0xFF 
-    dd 0x00010202 ; movr r02, r01
-    dd 0x10100201 ; movi r02, 0x10
-    dd 0x00010100 ; halt
+    dd 0xFFFF0101 ; movi r01, 0xFF 
+    dd 0x000A0201 ; movi r02, 0x01
+    dd 0x00020103 ; add r01, r02
+    dd 0x00000200 ; halt
 nano_code_len = $ - nano_code
