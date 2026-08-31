@@ -25,6 +25,11 @@ macro write fd, buf, length {
     syscall3 SYS_write, fd, buf, length 
 }
 
+macro verify_register register_number {
+    cmp register_number, number_registers
+    ja unknown_register
+}
+
 segment readable writable
 registers rb 32 * 4 ; Each register is 32 bytes
 ram rb 65536        ; 64ko for the RAM
@@ -49,8 +54,7 @@ movi:
     write STDOUT, movi_msg, movi_len
     ; rax = register number
     movzx rax, byte [r12]
-    cmp rax, number_registers
-    ja unknown_register
+    verify_register rax
     inc r12
     ; rdi = Immediate value
     movzx rdi, word [r12]
@@ -66,13 +70,11 @@ movr:
     write STDOUT, movr_msg, movr_len
     ; rax = register in
     movzx rax, byte [r12]
-    cmp rax, number_registers 
-    ja unknown_register
+    verify_register rax
     inc r12
     ; rdi = register out
     movzx rdi, byte [r12]
-    cmp rdi, number_registers
-    ja unknown_register
+    verify_register rdi
     inc r12
     ; Offset to be aligned with 32 bits
     inc r12
@@ -85,13 +87,11 @@ movr:
 op_add:
     ; rax = register in
     movzx rax, byte [r12]
-    cmp rax, number_registers
-    ja unknown_register
+    verify_register rax
     inc r12
     ; rdi = register out 
     movzx rdi, byte [r12]
-    cmp rdi, number_registers
-    ja unknown_register
+    verify_register rdi
     inc r12
     ; Offset to aligned with 32 bits
     inc r12
@@ -102,6 +102,13 @@ op_add:
     ; Add
     add eax, edx
     mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
+op_sub:
+    ; rax = register in
+    movzx rax, byte [r12]
+    verify_register rax
+    inc r12
     jmp fetch
 
 unknown_instruction:
