@@ -99,7 +99,7 @@ op_add:
     mov rsi, rax
     mov eax, dword [r13 + rsi * 4]
     mov edx, dword [r13 + rdi * 4]
-    ; Add
+    ; Add and store
     add eax, edx
     mov dword [r13 + rsi * 4], eax
     jmp fetch
@@ -109,6 +109,18 @@ op_sub:
     movzx rax, byte [r12]
     verify_register rax
     inc r12
+    ; rdi = register out
+    movzx rdi, byte [r12]
+    verify_register rdi
+    inc r12
+    ; Offset
+    inc r12
+    ; Read
+    mov esi, dword [r13 + rax * 4]
+    mov edx, dword [r13 + rdi * 4]
+    ; Sub and store
+    sub esi, edx
+    mov dword [r13 + rax * 4], esi
     jmp fetch
 
 unknown_instruction:
@@ -134,6 +146,7 @@ op_table:
     dq movi
     dq movr
     dq op_add
+    dq op_sub
 op_table_len = ($ - op_table) / 8 - 1 
 
 movi_msg: db 'Mov Immediate value', 10
@@ -158,6 +171,6 @@ halt_msg_len = $ - halt_msg
 nano_code:
     dd 0xFFFF0101 ; movi r01, 0xFF 
     dd 0x000A0201 ; movi r02, 0x01
-    dd 0x00020103 ; add r01, r02
-    dd 0x00000200 ; halt
+    dd 0x00020104 ; add r01, r02
+    dd 0x00000100 ; halt
 nano_code_len = $ - nano_code
