@@ -30,6 +30,12 @@ macro verify_register register_number {
     ja unknown_register
 }
 
+macro load_register register_in {
+    movzx rax, byte [r12]
+    verify_register rax
+    inc r12
+}
+
 segment readable writable
 registers rb 32 * 4 ; Each register is 32 bytes
 ram rb 65536        ; 64ko for the RAM
@@ -53,9 +59,7 @@ fetch:
 movi:
     write STDOUT, movi_msg, movi_len
     ; rax = register number
-    movzx rax, byte [r12]
-    verify_register rax
-    inc r12
+    load_register rax
     ; rdi = Immediate value
     movzx rdi, word [r12]
     inc r12
@@ -69,13 +73,9 @@ movi:
 movr:
     write STDOUT, movr_msg, movr_len
     ; rax = register in
-    movzx rax, byte [r12]
-    verify_register rax
-    inc r12
+    load_register rax
     ; rdi = register out
-    movzx rdi, byte [r12]
-    verify_register rdi
-    inc r12
+    load_register rdi
     ; Offset to be aligned with 32 bits
     inc r12
     ; Read and write
@@ -86,33 +86,24 @@ movr:
 
 op_add:
     ; rax = register in
-    movzx rax, byte [r12]
-    verify_register rax
-    inc r12
+    load_register rax
     ; rdi = register out 
-    movzx rdi, byte [r12]
-    verify_register rdi
-    inc r12
+    load_register rdi
     ; Offset to aligned with 32 bits
     inc r12
     ; Read
-    mov rsi, rax
-    mov eax, dword [r13 + rsi * 4]
+    mov esi, dword [r13 + rax * 4]
     mov edx, dword [r13 + rdi * 4]
     ; Add and store
-    add eax, edx
-    mov dword [r13 + rsi * 4], eax
+    add esi, edx
+    mov dword [r13 + rsi * 4], esi
     jmp fetch
 
 op_sub:
     ; rax = register in
-    movzx rax, byte [r12]
-    verify_register rax
-    inc r12
+    load_register rax
     ; rdi = register out
-    movzx rdi, byte [r12]
-    verify_register rdi
-    inc r12
+    load_register rdi
     ; Offset
     inc r12
     ; Read
@@ -120,6 +111,20 @@ op_sub:
     mov edx, dword [r13 + rdi * 4]
     ; Sub and store
     sub esi, edx
+    mov dword [r13 + rax * 4], esi
+    jmp fetch
+
+op_mul:
+    ; rax = register in
+    load_register rax
+    ; rdi = register out
+    load_register rdi
+    ; Offset
+    inc r12
+    ; Read, mul and store 
+    mov esi, dword [r13 + rax * 4]
+    mov edx, dword [r13 + rdi * 4]
+    mul esi, edx
     mov dword [r13 + rax * 4], esi
     jmp fetch
 
