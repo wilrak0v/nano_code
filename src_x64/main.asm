@@ -132,7 +132,7 @@ op_mul:
     jmp fetch
 
 op_div:
-;    write STDOUT, div_msg, div_msg_len
+    write STDOUT, div_msg, div_msg_len
     ; rax = register in
     load_register rsi 
     ; rdi = register out
@@ -146,6 +146,18 @@ op_div:
     xor rdx, rdx
     div ebx
     mov dword [r13 + rsi * 4], eax 
+    jmp fetch
+
+op_mod:
+    load_register rsi
+    load_register rdi
+    inc r12
+
+    mov eax, dword [r13 + rsi * 4]
+    mov ebx, dword [r13 + rdi * 4]
+    xor rdx, rdx
+    div ebx
+    mov dword [r13 + rsi * 4], edx
     jmp fetch
 
 unknown_instruction:
@@ -174,6 +186,7 @@ op_table:
     dq op_sub
     dq op_mul
     dq op_div
+    dq op_mod
 
 op_table_len = ($ - op_table) / 8 - 1 
 
@@ -197,8 +210,8 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    dd 0x000A0101 ; movi r01, 10 
+    dd 0x00070101 ; movi r01, 10 
     dd 0x00020201 ; movi r02, 02 
-    dd 0x00020106 ; div r01, r02
+    dd 0x00020107 ; div r01, r02
     dd 0x00000100 ; halt
 nano_code_len = $ - nano_code
