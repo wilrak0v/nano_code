@@ -160,12 +160,29 @@ op_mod:
     mov dword [r13 + rsi * 4], edx
     jmp fetch
 
+op_jmpi:
+    ; Fetch immediate 
+    movzx rbx, byte [r12]
+    shl rbx, 2
+    ; Verify if it's aligned (4 bytes)
+    mov rax, rbx
+    test al, 3
+    jnz address_not_aligned 
+    ; change r12
+    add rbx, nano_code
+    mov r12, rbx
+    jmp fetch
+
 unknown_instruction:
     write STDOUT, unknown_msg, unknown_msg_len
     exit 69
 
 unknown_register:
     write STDOUT, unknown_register_msg, unknown_register_msg_len
+    exit 69
+
+address_not_aligned:
+    write STDOUT, address_not_aligned_msg, address_not_aligned_len 
     exit 69
 
 halt:
@@ -187,6 +204,7 @@ op_table:
     dq op_mul
     dq op_div
     dq op_mod
+    dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
 
@@ -205,12 +223,16 @@ unknown_msg_len = $ - unknown_msg
 unknown_register_msg: db 'ERROR: Unknown register', 10
 unknown_register_msg_len = $ - unknown_register_msg
 
+address_not_aligned_msg: db 'ERROR: address not aligned (4 bytes)', 10
+address_not_aligned_len = $ - address_not_aligned_msg
+
 halt_msg: db 'Halt', 10
 halt_msg_len = $ - halt_msg 
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    dd 0x00070101 ; movi r01, 10 
+    dd 0x000A0101 ; movi r01, 10 
+    dd 0x00000108 ; jmp 0x000000
     dd 0x00020201 ; movi r02, 02 
     dd 0x00020107 ; div r01, r02
     dd 0x00000100 ; halt
