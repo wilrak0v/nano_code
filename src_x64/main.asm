@@ -31,9 +31,9 @@ macro verify_register register_number {
 }
 
 macro load_register register_in {
-    movzx r10, byte [r12]
-    verify_register r10
-    mov register_in, r10
+    movzx register_in, byte [r12]
+    verify_register register_in 
+    ;mov register_in, r10
     inc r12
 }
 
