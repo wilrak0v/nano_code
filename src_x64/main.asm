@@ -31,8 +31,9 @@ macro verify_register register_number {
 }
 
 macro load_register register_in {
-    movzx rax, byte [r12]
-    verify_register rax
+    movzx r10, byte [r12]
+    verify_register r10
+    mov register_in, r10
     inc r12
 }
 
@@ -96,7 +97,7 @@ op_add:
     mov edx, dword [r13 + rdi * 4]
     ; Add and store
     add esi, edx
-    mov dword [r13 + rsi * 4], esi
+    mov dword [r13 + rax * 4], esi
     jmp fetch
 
 op_sub:
@@ -116,16 +117,35 @@ op_sub:
 
 op_mul:
     ; rax = register in
-    load_register rax
+    load_register rsi 
     ; rdi = register out
     load_register rdi
     ; Offset
     inc r12
     ; Read, mul and store 
-    mov esi, dword [r13 + rax * 4]
-    mov edx, dword [r13 + rdi * 4]
-    mul esi, edx
-    mov dword [r13 + rax * 4], esi
+    mov eax, dword [r13 + rsi * 4]
+    mov ebx, dword [r13 + rdi * 4]
+    ; Mul and Store
+    xor edx, edx
+    mul ebx
+    mov dword [r13 + rsi * 4], eax 
+    jmp fetch
+
+op_div:
+;    write STDOUT, div_msg, div_msg_len
+    ; rax = register in
+    load_register rsi 
+    ; rdi = register out
+    load_register rdi
+    ; Offset
+    inc r12
+    ; Read, di9v and store
+    mov eax, dword [r13 + rsi * 4]
+    mov ebx, dword [r13 + rdi * 4]
+    ; div
+    xor rdx, rdx
+    div ebx
+    mov dword [r13 + rsi * 4], eax 
     jmp fetch
 
 unknown_instruction:
@@ -152,6 +172,9 @@ op_table:
     dq movr
     dq op_add
     dq op_sub
+    dq op_mul
+    dq op_div
+
 op_table_len = ($ - op_table) / 8 - 1 
 
 movi_msg: db 'Mov Immediate value', 10
@@ -160,8 +183,8 @@ movi_len = $ - movi_msg
 movr_msg: db 'Mov Register', 10
 movr_len = $ - movr_msg
 
-sys_msg: db 'Sys', 10
-sys_msg_len = $ - sys_msg
+div_msg: db 'Div', 10
+div_msg_len = $ - div_msg
 
 unknown_msg: db 'ERROR: Unknown instruction', 10
 unknown_msg_len = $ - unknown_msg
@@ -174,8 +197,8 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    dd 0xFFFF0101 ; movi r01, 0xFF 
-    dd 0x000A0201 ; movi r02, 0x01
-    dd 0x00020104 ; add r01, r02
+    dd 0x000A0101 ; movi r01, 10 
+    dd 0x00020201 ; movi r02, 02 
+    dd 0x00020106 ; div r01, r02
     dd 0x00000100 ; halt
 nano_code_len = $ - nano_code
