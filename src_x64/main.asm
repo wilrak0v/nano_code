@@ -86,6 +86,7 @@ movr:
     jmp fetch 
 
 op_add:
+    write STDOUT, add_msg, add_len
     ; rax = register in
     load_register rax
     ; rdi = register out 
@@ -101,6 +102,7 @@ op_add:
     jmp fetch
 
 op_sub:
+    write STDOUT, sub_msg, sub_len
     ; rax = register in
     load_register rax
     ; rdi = register out
@@ -197,7 +199,7 @@ op_cmp:
     mov edx, dword [r13 + rsi * 4]
     mov ebx, dword [r13 + rdi * 4]
     inc r12
-    cmp rdx, rbx 
+    cmp edx, ebx 
     lahf
     mov al, ah
     mov r15b, al
@@ -208,9 +210,6 @@ op_jmp:
     ; Read
     mov eax, dword [r13 + rsi * 4]
     shl rax, 2
-    ; Verify
-    test al, 3
-    jnz address_not_aligned
     ; Jump
     add rax, nano_code
     mov r12, rax 
@@ -223,9 +222,6 @@ op_je:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
     shl rax, 2
-    ; Verify
-    test al, 3
-    jnz address_not_aligned
     ; Jump
     add rax, nano_code
     mov r12, rax
@@ -236,14 +232,11 @@ op_je.no_jump:
 
 op_jne:
     test r15b, 0x40     ; Check the zero flag
-    jnz op_je.no_jump
+    jnz op_jne.no_jump
 
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
     shl rax, 2
-    ; Verify
-    test al, 3
-    jnz address_not_aligned
     ; Jump
     add rax, nano_code
     mov r12, rax
@@ -259,8 +252,6 @@ op_jlt:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
     shl rax, 2
-    test al, 3
-    jnz address_not_aligned
     add rax, nano_code
     mov r12, rax
     jmp fetch
@@ -275,8 +266,6 @@ op_jgt:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
     shl rax, 2
-    test al, 3
-    jnz address_not_aligned
     add rax, nano_code
     mov r12, rax
     jmp fetch
@@ -289,10 +278,6 @@ op_jmpi:
     ; Fetch immediate 
     movzx rbx, word [r12]
     shl rbx, 2
-    ; Verify if it's aligned (4 bytes)
-    mov rax, rbx
-    test al, 3
-    jnz address_not_aligned 
     ; change r12
     add rbx, nano_code
     mov r12, rbx
@@ -348,6 +333,12 @@ movi_len = $ - movi_msg
 movr_msg: db 'Mov Register', 10
 movr_len = $ - movr_msg
 
+sub_msg: db 'Sub Registers', 10
+sub_len = $ - sub_msg
+
+add_msg: db 'Add Registers', 10
+add_len = $ - add_msg
+
 div_msg: db 'Div', 10
 div_msg_len = $ - div_msg
 
@@ -365,10 +356,22 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    dd 0x00040201 ; movi r02
-    dd 0x00010101 ; movi r01, 10 
-    dd 0x00000301 ; movi r03
-    dd 0x0003010B ; cmp
-    dd 0x00000210 ; je 
-    dd 0x00000100 ; halt
+    db 0x01, 10, 6,    0x00  ; movi r10, 6
+    db 0x01, 0,  0,    0x00  ; movi r0, 0
+    db 0x01, 1,  0,    0x00  ; movi r1, 0  (Fib(0) = 0)
+    db 0x01, 2,  1,    0x00  ; movi r2, 1  (Fib(1) = 1)
+    db 0x01, 3,  0x0c,   0x00  ; movi r3, 40
+    db 0x01, 4,  1,    0x00  ; movi r4, 1
+
+    ; Loop
+    db 0x02, 5,  1,    0x00  ; movr r5, r1 (r5 = r1)
+    db 0x03, 5,  2,    0x00  ; add r5, r2  (r5 = r5 + r2)
+    db 0x02, 1,  2,    0x00  ; movr r1, r2 (r1 = r2)
+    db 0x02, 2,  5,    0x00  ; movr r2, r5 (r2 = r5)
+
+    db 0x04, 3,  4,    0x00  ; sub r3, r4
+    db 0x0B, 3,  0,    0x00  ; cmp r3, r0
+    db 0x10, 10, 0,    0x00  ; jgt r10
+
+    db 0x00, 2,  0,    0x00  ; halt r2 
 nano_code_len = $ - nano_code
