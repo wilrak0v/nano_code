@@ -252,6 +252,21 @@ op_jne.no_jump:
     add r12, 3
     jmp fetch
 
+op_jlt:
+    test r15b, 0x80
+    jz op_jlt.no_jump
+
+    load_register rsi
+    mov eax, dword [r13 + rsi * 4]
+    shl rax, 2
+    test al, 3
+    jnz address_not_aligned
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+op_jlt.no_jump:
+    add r12, 3
+    jmp fetch
 
 
 op_jmpi:
@@ -305,6 +320,7 @@ op_table:
     dq op_jmp
     dq op_je
     dq op_jne
+    dq op_jlt
     dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
@@ -333,9 +349,9 @@ halt_msg_len = $ - halt_msg
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
     dd 0x00040201 ; movi r02
-    dd 0x00010101 ; movi r01, 10 
-    dd 0x00000301 ; movi r03
+    dd 0x00000101 ; movi r01, 10 
+    dd 0x00010301 ; movi r03
     dd 0x0003010B ; cmp
-    dd 0x0000020E ; je 
+    dd 0x0000020F ; je 
     dd 0x00000100 ; halt
 nano_code_len = $ - nano_code
