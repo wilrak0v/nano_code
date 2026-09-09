@@ -365,6 +365,23 @@ op_jgt.no_jump:
     add r12, 3
     jmp fetch
 
+op_jz:
+    ; JZ Ra, [Rb] => if Ra == 0 jump to Rb
+    load_register rsi
+    mov eax, dword [r13 + rsi * 4]
+    cmp rax, 0
+    jnz op_jz.no_jump
+
+    load_register rdi
+    mov eax, dword [r13 + rdi * 4]
+    shl rax, 2
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+op_jz.no_jump:
+    add r12, 2
+    jmp fetch
+
 
 op_jmpi:
     ; Fetch immediate 
@@ -424,6 +441,7 @@ op_table:
     dq op_jne
     dq op_jlt
     dq op_jgt
+    dq op_jz
     dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
@@ -457,7 +475,8 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    db 0x01, 1, 10, 0x00 ; movi r01, 2
-    db 0x0C, 1, 3, 0x00; addi r01, 10
+    db 0x01, 1, 0, 0x00 ; movi r01, 2
+    db 0x01, 2, 2, 0x00
+    db 26, 1, 2, 0x00 ; jz r01, 1
     db 0x00, 1, 0, 0x00 ; halt r2 
 nano_code_len = $ - nano_code
