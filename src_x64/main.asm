@@ -190,10 +190,21 @@ op_xor:
     mov dword [r13 + rsi * 4], eax
     jmp fetch
 
+op_cmp:
+    load_register rsi
+    load_register rdi
+    ; Read
+    mov edx, dword [r13 + rsi * 4]
+    mov ebx, dword [r13 + rdi * 4]
+    inc r12
+    cmp rdx, rbx 
+    lahf
+    mov al, ah
+    mov r15b, al
+    jmp fetch
+
 op_jmp:
     load_register rsi
-    inc r12
-    inc r12
     ; Read
     mov eax, dword [r13 + rsi * 4]
     shl rax, 2
@@ -203,6 +214,24 @@ op_jmp:
     ; Jump
     add rax, nano_code
     mov r12, rax 
+    jmp fetch
+
+op_je:
+    test r15b, 0x40     ; Check the zero flag
+    jz op_je.no_jump    ; verify if it's not equal 
+
+    load_register rsi
+    mov eax, dword [r13 + rsi * 4]
+    shl rax, 2
+    ; Verify
+    test al, 3
+    jnz address_not_aligned
+    ; Jump
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+op_je.no_jump:
+    add r12, 3
     jmp fetch
 
 op_jmpi:
@@ -252,7 +281,9 @@ op_table:
     dq op_and
     dq op_or
     dq op_xor
+    dq op_cmp
     dq op_jmp
+    dq op_je
     dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
@@ -280,8 +311,10 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    dd 0x00020101 ; movi r01, 10 
-    dd 0x00430201 ; movi r02
-    dd 0x0000010B ; and 
+    dd 0x00040201 ; movi r02
+    dd 0x00010101 ; movi r01, 10 
+    dd 0x00000301 ; movi r03
+    dd 0x0003010B ; cmp
+    dd 0x0000020D ; je 
     dd 0x00000100 ; halt
 nano_code_len = $ - nano_code
