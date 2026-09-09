@@ -192,6 +192,46 @@ op_xor:
     mov dword [r13 + rsi * 4], eax
     jmp fetch
 
+op_shl:
+    load_register rsi
+    load_register rdi
+    inc r12
+    mov eax, dword [r13 + rsi * 4]
+    mov cl, byte [r13 + rdi * 4]
+    shl rax, cl 
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
+op_shr:
+    load_register rsi
+    load_register rdi
+    inc r12
+    mov eax, dword [r13 + rsi * 4]
+    mov cl, byte [r13 + rdi * 4]
+    shr rax, cl 
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
+op_shli:
+    load_register rsi
+    mov eax, dword [r13 + rsi * 4]
+    mov cl, byte [r12]
+    inc r12
+    inc r12
+    shl eax, cl
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
+op_shri:
+    load_register rsi
+    mov eax, dword [r13 + rsi * 4]
+    mov cl, byte [r12]
+    inc r12
+    inc r12
+    shr eax, cl
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
 op_cmp:
     load_register rsi
     load_register rdi
@@ -306,17 +346,21 @@ halt:
 segment readable
 
 op_table:
-    dq halt
-    dq movi
-    dq movr
-    dq op_add
-    dq op_sub
-    dq op_mul
-    dq op_div
-    dq op_mod
-    dq op_and
-    dq op_or
-    dq op_xor
+    dq halt         ; 0x00
+    dq movi         ; 0x01
+    dq movr         ; 0x02
+    dq op_add       ; 0x03
+    dq op_sub       ; 0x04
+    dq op_mul       ; 0x05
+    dq op_div       ; 0x06
+    dq op_mod       ; 0x07
+    dq op_and       ; 0x08
+    dq op_or        ; 0x09
+    dq op_xor       ; 0x0A
+    dq op_shl       ; 0x0B
+    dq op_shr       ; 0x0C
+    dq op_shli      ; 0x0D
+    dq op_shri      ; 0x0E
     dq op_cmp
     dq op_jmp
     dq op_je
@@ -356,22 +400,8 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    db 0x01, 10, 6,    0x00  ; movi r10, 6
-    db 0x01, 0,  0,    0x00  ; movi r0, 0
-    db 0x01, 1,  0,    0x00  ; movi r1, 0  (Fib(0) = 0)
-    db 0x01, 2,  1,    0x00  ; movi r2, 1  (Fib(1) = 1)
-    db 0x01, 3,  0x0c,   0x00  ; movi r3, 40
-    db 0x01, 4,  1,    0x00  ; movi r4, 1
-
-    ; Loop
-    db 0x02, 5,  1,    0x00  ; movr r5, r1 (r5 = r1)
-    db 0x03, 5,  2,    0x00  ; add r5, r2  (r5 = r5 + r2)
-    db 0x02, 1,  2,    0x00  ; movr r1, r2 (r1 = r2)
-    db 0x02, 2,  5,    0x00  ; movr r2, r5 (r2 = r5)
-
-    db 0x04, 3,  4,    0x00  ; sub r3, r4
-    db 0x0B, 3,  0,    0x00  ; cmp r3, r0
-    db 0x10, 10, 0,    0x00  ; jgt r10
-
-    db 0x00, 2,  0,    0x00  ; halt r2 
+    db 0x01, 1, 2, 0x00 ; movi r01, 2
+    db 0x01, 3, 1, 0x00 ; movi r02, 1
+    db 0x0B, 1, 3, 0x00 ; shli r01, 2
+    db 0x00, 1, 0, 0x00 ; halt r2 
 nano_code_len = $ - nano_code
