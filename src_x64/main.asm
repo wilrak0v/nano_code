@@ -182,6 +182,16 @@ op_subi:
     mov dword [r13 + rax * 4], esi
     jmp fetch
 
+op_muli:
+    load_register rsi
+    mov eax, dword [r13 + rsi * 4]
+    mov bx, word [r12]
+    inc r12
+    inc r12
+    mul ebx
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
 op_and:
     load_register rsi
     load_register rdi
@@ -376,6 +386,7 @@ op_table:
     dq op_mod       ; 0x07
     dq op_addi      ; 0x08
     dq op_subi
+    dq op_muli
     dq op_and
     dq op_or
     dq op_xor
@@ -423,6 +434,6 @@ halt_msg_len = $ - halt_msg
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
     db 0x01, 1, 10, 0x00 ; movi r01, 2
-    db 0x09, 1, 2, 0x00; addi r01, 10
+    db 0x0A, 1, 2, 0x00; addi r01, 10
     db 0x00, 1, 0, 0x00 ; halt r2 
 nano_code_len = $ - nano_code
