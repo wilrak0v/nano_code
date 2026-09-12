@@ -398,17 +398,32 @@ op_jnz.no_jump:
     add r12, 2
     jmp fetch
 
+; TODO: fix it
 op_cmpi:
     load_register rsi
-    mov bx, word [r12]
+    movzx ebx, word [r12]
+    inc r12
     inc r12
     ; Read
     mov edx, dword [r13 + rsi * 4]
-    inc r12
     cmp edx, ebx 
     lahf
     mov al, ah
     mov r15b, al
+    jmp fetch
+
+op_jei:
+    test r15b, 0x40     ; Check the zero flag
+    jz op_jei.no_jump
+
+    movzx rax, word [r12]
+    shl rax, 2
+    ; Jump
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+op_jei.no_jump:
+    add r12, 3
     jmp fetch
 
 op_jmpi:
@@ -472,6 +487,7 @@ op_table:
     dq op_jz
     dq op_jnz
     dq op_cmpi
+    dq op_jei
     dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
@@ -506,8 +522,9 @@ halt_msg_len = $ - halt_msg
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
     db 0x01, 1, 190, 0x00 ; movi r01, 2
-    db 0x01, 2, 2, 0x00
+    db 0x01, 3, 0, 0 
     db 28, 1, 190, 0       ; cmp r1, 190
-    db 22, 2, 0, 0 
+    db 29, 3, 0, 0
+    db 0x01, 1, 190, 0x00
     db 0x00, 1, 0, 0x00 ; halt r2 
 nano_code_len = $ - nano_code
