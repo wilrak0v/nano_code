@@ -398,7 +398,30 @@ op_jnz.no_jump:
     add r12, 2
     jmp fetch
 
-; TODO: fix it
+op_call:
+    ; call [R] => mov r29, address ; jump [R]
+    load_register rsi
+    mov ebx, dword [r13 + rsi * 4]
+
+    add r12, 3
+    sub r12, nano_code
+    shr r12, 2
+    mov dword [r13 + 29 * 4], r12d 
+
+    mov eax, ebx
+    shl rax, 2
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+
+op_ret:
+    xor rax, rax
+    mov eax, dword [r13 + 29 * 4]
+    mov r12, rax
+    shl r12, 2
+    add r12, nano_code
+    jmp fetch
+
 op_cmpi:
     load_register rsi
     movzx ebx, word [r12]
@@ -543,6 +566,8 @@ op_table:
     dq op_jgt
     dq op_jz
     dq op_jnz
+    dq op_call
+    dq op_ret
     dq op_cmpi
     dq op_jei
     dq op_jli
@@ -582,10 +607,11 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    db 0x01, 1, 1, 0x00 ; movi r01, 2
-    db 0x01, 3, 0, 0 
-    db 28, 1, 190, 0       ; cmp r1, 190
-    db 33, 1, 3, 0
-    db 0x01, 1, 190, 0x00
-    db 0x00, 1, 0, 0x00 ; halt r2 
+    db 0x01, 1, 3, 0x00   ; movi r01, 2
+    db 28, 1, 0, 0        ; call r01
+    db 0x00, 29, 0, 0x00  ; halt r2 
+    ; function
+    db 0x01, 1, 190, 0x00 ; mov r01, 190
+    db 0x01, 3, 0, 0      ; mov r03, 0
+    db 29, 0, 0, 0        ; ret 
 nano_code_len = $ - nano_code
