@@ -439,6 +439,19 @@ op_jli.no_jump:
     add r12, 3
     jmp fetch
 
+op_jgi:
+    test r15b, 0xC0     ; 0x80 | 0x40 = 0xC0
+    jnz op_jgt.no_jump
+    
+    movzx rax, word [r12]
+    shl rax, 2
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+op_jgi.no_jump:
+    add r12, 3
+    jmp fetch
+
 op_jmpi:
     ; Fetch immediate 
     movzx rbx, word [r12]
@@ -502,6 +515,7 @@ op_table:
     dq op_cmpi
     dq op_jei
     dq op_jli
+    dq op_jgi
     dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
@@ -538,7 +552,7 @@ nano_code:
     db 0x01, 1, 200, 0x00 ; movi r01, 2
     db 0x01, 3, 0, 0 
     db 28, 1, 190, 0       ; cmp r1, 190
-    db 30, 3, 0, 0
+    db 31, 3, 0, 0
     db 0x01, 1, 190, 0x00
     db 0x00, 1, 0, 0x00 ; halt r2 
 nano_code_len = $ - nano_code
