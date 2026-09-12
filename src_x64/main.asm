@@ -1,7 +1,9 @@
 format ELF64 executable 3
 
+SYS_read = 0
 SYS_write = 1
 STDOUT = 1
+STDIN = 0
 
 macro syscall1 number, arg {
     mov rax, number
@@ -37,11 +39,6 @@ macro load_register register_in {
     inc r12
 }
 
-segment readable writable
-registers rb 32 * 4 ; Each register is 32 bytes
-ram rb 65536        ; 64ko for the RAM
-number_registers = 32 
-
 segment readable executable
 entry start
 
@@ -58,7 +55,7 @@ fetch:
     jmp qword [op_table + rbx*8]
 
 movi:
-    write STDOUT, movi_msg, movi_len
+    ;write STDOUT, movi_msg, movi_len
     ; rax = register number
     load_register rax
     ; rdi = Immediate value
@@ -81,7 +78,7 @@ movl:
     jmp fetch
 
 movr:
-    write STDOUT, movr_msg, movr_len
+    ;write STDOUT, movr_msg, movr_len
     ; rax = register in
     load_register rax
     ; rdi = register out
@@ -159,7 +156,7 @@ op_load32:
     jmp fetch
 
 op_add:
-    write STDOUT, add_msg, add_len
+    ;write STDOUT, add_msg, add_len
     ; rax = register in
     load_register rax
     ; rdi = register out 
@@ -175,7 +172,7 @@ op_add:
     jmp fetch
 
 op_sub:
-    write STDOUT, sub_msg, sub_len
+    ;write STDOUT, sub_msg, sub_len
     ; rax = register in
     load_register rax
     ; rdi = register out
@@ -207,7 +204,7 @@ op_mul:
     jmp fetch
 
 op_div:
-    write STDOUT, div_msg, div_msg_len
+    ;write STDOUT, div_msg, div_msg_len
     ; rax = register in
     load_register rsi 
     ; rdi = register out
@@ -605,7 +602,17 @@ op_sys:
     ; sys 17
     movzx rbx, word [r12]
     add r12, 3
-    jmp qword [sys_table + rbx * 4]
+    jmp qword [sys_table + rbx * 8]
+
+sys_read:
+    jmp fetch
+    xor rax, rax
+    mov edi, dword [r13 + 1 * 4]
+    mov esi, dword [r13 + 2 * 4]
+    mov edx, dword [r13 + 3 * 4]
+    add rsi, ram
+    syscall
+    jmp fetch
 
 sys_print:
     mov rax, 1
@@ -629,7 +636,7 @@ address_not_aligned:
     exit 69
 
 halt:
-    write STDOUT, halt_msg, halt_msg_len
+    ;write STDOUT, halt_msg, halt_msg_len
     movzx rax, byte [r12]
     cmp rax, number_registers
     ja unknown_register
@@ -639,6 +646,7 @@ halt:
 segment readable
 
 sys_table:
+    dq sys_read
     dq sys_print
 
 op_table:
@@ -691,20 +699,17 @@ op_table:
 
 op_table_len = ($ - op_table) / 8 - 1 
 
-movi_msg: db 'Mov Immediate value', 10
-movi_len = $ - movi_msg
+;movi_msg: db 'Mov Immediate value', 10
+;movi_len = $ - movi_msg
 
-movr_msg: db 'Mov Register', 10
-movr_len = $ - movr_msg
+;movr_msg: db 'Mov Register', 10
+;movr_len = $ - movr_msg
 
-sub_msg: db 'Sub Registers', 10
-sub_len = $ - sub_msg
+;sub_msg: db 'Sub Registers', 10
+;sub_len = $ - sub_msg
 
-add_msg: db 'Add Registers', 10
-add_len = $ - add_msg
-
-div_msg: db 'Div', 10
-div_msg_len = $ - div_msg
+;add_msg: db 'Add Registers', 10
+;add_len = $ - add_msg
 
 unknown_msg: db 'ERROR: Unknown instruction', 10
 unknown_msg_len = $ - unknown_msg
@@ -715,15 +720,19 @@ unknown_register_msg_len = $ - unknown_register_msg
 address_not_aligned_msg: db 'ERROR: address not aligned (4 bytes)', 10
 address_not_aligned_len = $ - address_not_aligned_msg
 
-halt_msg: db 'Halt', 10
-halt_msg_len = $ - halt_msg 
+;halt_msg: db 'Halt', 10
+;halt_msg_len = $ - halt_msg 
+
+segment readable writable
+number_registers = 32 
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    db 1, 1, SYS_write, 0
+    db 1, STDOUT, 0, 0
     db 1, 2, 20, 0
     db 1, 3, 12, 0
-    db 45, 0, 0, 0
+    db 45, 1, 0, 0
     db 0, 2, 0, 0
     db 'Hello World', 10
-nano_code_len = $ - nano_code
+ram rb 65536        ; 64ko for the RAM
+registers rb number_registers * 4 ; Each register is 32 bytes

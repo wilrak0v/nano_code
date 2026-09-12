@@ -7,10 +7,10 @@
 
 - [x] Store8 [R], R   => Indirect
 - [x] Load8  R, [R]   => Indirect
-- [ ] Store16 [R], R  => Indirect
-- [ ] Load16 R, [R]   => Indirect
-- [ ] Store32 [R], R  => Indirect
-- [ ] Load32 R, [R]   => Indirect
+- [x] Store16 [R], R  => Indirect
+- [x] Load16 R, [R]   => Indirect
+- [x] Store32 [R], R  => Indirect
+- [x] Load32 R, [R]   => Indirect
 
 - [x] Add   R, R      => Indirect
 - [x] Sub   R, R      => Indirect
@@ -50,6 +50,6 @@
 - [x] JGI   16        => Immediate 
 - [x] JZI   R, 16     => Immediate
 - [x] JNZI  R, 16     => Immediate
-- [ ] CALLI 16        => Immediate 
+- [x] CALLI 16        => Immediate 
 
-- [ ] SYS   16        => Immediate
+- [x] SYS   16        => Immediate
