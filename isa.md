@@ -1,47 +1,55 @@
 # ISA
 
 ## REGISTERS
-- Movi  R, 16     => Immediate
-- Movr  R, R      => Indirect
-- Loadi R, 16     => Immediate
-- Stori R, 16     => address
+- [x] Movi  R, 16     => Immediate
+- [x] Movl  R, 16     => Immediate (64 bits)
+- [x] Movr  R, R      => Indirect
 
-- Load  R, [R]    => Indirect
-- Store R, [R]    => Indirect
-- Push  R         => Indirect
-- Pop   R         => Indirect
+- [x] Store8 [R], R   => Indirect
+- [x] Load8  R, [R]   => Indirect
+- [ ] Store16 [R], R  => Indirect
+- [ ] Load16 R, [R]   => Indirect
+- [ ] Store32 [R], R  => Indirect
+- [ ] Load32 R, [R]   => Indirect
 
-- Add   R, R, R   => Indirect
-- Sub   R, R, R   => Indirect
-- Mul   R, R, R   => Indirect
-- Div   R, R, R   => Indirect
-- Mod   R, R, R   => Indirect
+- [x] Add   R, R      => Indirect
+- [x] Sub   R, R      => Indirect
+- [x] Mul   R, R      => Indirect
+- [x] Div   R, R      => Indirect
+- [x] Mod   R, R      => Indirect
 
-- Addi  R, R, 16  => Immediate
-- Subi  R, R, 16  => Immediate
-- Muli  R, R, 16  => Immediate 
-- Divi  R, R, 16  => Immediate 
-- Modi  R, R, 16  => Immediate 
+- [x] Addi  R, 16     => Immediate
+- [x] Subi  R, 16     => Immediate
+- [x] Muli  R, 16     => Immediate 
+- [x] Divi  R, 16     => Immediate 
+- [x] Modi  R, 16     => Immediate 
 
-- AND   R, R, R   => Indirect
-- OR    R, R, R   => Indirect
-- XOR   R, R, R   => Indirect
-- SHL   R, R      => Indirect
-- SHR   R, R      => Indirect
+- [x] AND   R, R      => Indirect
+- [x] OR    R, R      => Indirect
+- [x] XOR   R, R      => Indirect
+- [x] SHL   R, R      => Indirect
+- [x] SHR   R, R      => Indirect
 
-- SHLI  R, 16     => Immediate
-- SHRI  R, 16     => Immediate
+- [x] SHLI  R, 16     => Immediate
+- [x] SHRI  R, 16     => Immediate
 
-- CMP   R, R      => Indirect 
-- JMP   [R]       => Indirect
-- JZ    [R]       => Indirect
-- JNZ   [R]       => Indirect
-- CALL  [R]       => Indirect
-- RET
+- [X] CMP   R, R      => Indirect 
+- [x] JMP   [R]       => Indirect
+- [x] JE    [R]       => Indirect
+- [x] JL    [R]       => Indirect
+- [x] JG    [R]       => Indirect
+- [x] JZ    R, [R]    => Indirect
+- [x] JNZ   R, [R]    => Indirect
+- [x] CALL  [R]       => Indirect
+- [x] RET
 
-- JMPI  16        => Immediate
-- JZI   16        => Immediate
-- JNZI  16        => Immediate
-- CALLI 16        => Immediate 
+- [x] CMPI  R, 16     => Immediate
+- [x] JMPI  16        => Immediate
+- [x] JEI   16        => Immediate
+- [x] JLI   16        => Immediate 
+- [x] JGI   16        => Immediate 
+- [x] JZI   R, 16     => Immediate
+- [x] JNZI  R, 16     => Immediate
+- [ ] CALLI 16        => Immediate 
 
-- SYS   16        => Immediate
+- [ ] SYS   16        => Immediate
