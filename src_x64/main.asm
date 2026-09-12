@@ -588,6 +588,19 @@ op_jmpi:
     mov r12, rbx
     jmp fetch
 
+op_calli:
+    ; call 16
+    movzx rax, word [r12]
+    add r12, 3
+    sub r12, nano_code 
+    shr r12, 2
+    mov [r13 + 29 * 4], r12b
+
+    shl rax, 2
+    add rax, nano_code
+    mov r12, rax
+    jmp fetch
+
 unknown_instruction:
     write STDOUT, unknown_msg, unknown_msg_len
     exit 69
@@ -655,6 +668,7 @@ op_table:
     dq op_jzi
     dq op_jnzi
     dq op_jmpi
+    dq op_calli
 
 op_table_len = ($ - op_table) / 8 - 1 
 
@@ -688,9 +702,10 @@ halt_msg_len = $ - halt_msg
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
     db 1, 1, 200, 0
-    db 1, 2, 5, 0
-    db 4, 2, 1, 0
-    db 1, 1, 100, 0
-    db 5, 1, 2, 0
-    db 0, 1, 0, 0
+    db 44, 3, 0, 0
+    db 0, 2, 0, 0
+
+    db 3, 2, 1, 0
+    db 1, 4, 5, 0
+    db 36, 0, 0, 0
 nano_code_len = $ - nano_code
