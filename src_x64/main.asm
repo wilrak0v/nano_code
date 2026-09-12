@@ -116,6 +116,26 @@ op_load8:
     mov byte [r13 + rsi * 4], al
     jmp fetch
 
+op_store16:
+    load_register rsi
+    load_register rdi
+    inc r12
+    xor rdx, rdx
+    mov edx, dword [r13 + rsi * 4]
+    mov ax, word [r13 + rdi * 4]
+    mov word [ram + rdx], ax
+    jmp fetch
+
+op_load16:
+    load_register rsi
+    load_register rdi
+    inc r12
+    xor rdx, rdx
+    mov edx, dword [r13 + rdi * 4]
+    mov ax, word [ram + rdx]
+    mov word [r13 + rsi * 4], ax
+    jmp fetch
+
 op_add:
     write STDOUT, add_msg, add_len
     ; rax = register in
@@ -575,6 +595,8 @@ op_table:
     dq movr         ; 0x02
     dq op_store8
     dq op_load8
+    dq op_store16
+    dq op_load16
     dq op_add       ; 0x03
     dq op_sub       ; 0x04
     dq op_mul       ; 0x05
