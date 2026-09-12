@@ -601,6 +601,21 @@ op_calli:
     mov r12, rax
     jmp fetch
 
+op_sys:
+    ; sys 17
+    movzx rbx, word [r12]
+    add r12, 3
+    jmp qword [sys_table + rbx * 4]
+
+sys_print:
+    mov rax, 1
+    mov edi, dword [r13 + 1 * 4]
+    mov esi, dword [r13 + 2 * 4]
+    mov edx, dword [r13 + 3 * 4]
+    add rsi, nano_code
+    syscall
+    jmp fetch
+
 unknown_instruction:
     write STDOUT, unknown_msg, unknown_msg_len
     exit 69
@@ -622,6 +637,9 @@ halt:
     exit rdi 
 
 segment readable
+
+sys_table:
+    dq sys_print
 
 op_table:
     dq halt
@@ -669,6 +687,7 @@ op_table:
     dq op_jnzi
     dq op_jmpi
     dq op_calli
+    dq op_sys
 
 op_table_len = ($ - op_table) / 8 - 1 
 
@@ -701,11 +720,10 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    db 1, 1, 200, 0
-    db 44, 3, 0, 0
+    db 1, 1, SYS_write, 0
+    db 1, 2, 20, 0
+    db 1, 3, 12, 0
+    db 45, 0, 0, 0
     db 0, 2, 0, 0
-
-    db 3, 2, 1, 0
-    db 1, 4, 5, 0
-    db 36, 0, 0, 0
+    db 'Hello World', 10
 nano_code_len = $ - nano_code
