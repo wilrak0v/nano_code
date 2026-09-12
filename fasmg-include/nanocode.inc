@@ -1,14 +1,20 @@
-element reg
-element r0 : reg + 0
-element r1 : reg + 1
-element r2 : reg + 2
-element r3 : reg + 3
+element Register
 
-macro movi? reg, value
-    db 0x01, reg
+element r0 : Register + 0
+element r1 : Register + 1
+element r2 : Register + 2
+
+macro movi dst*, value
+    local reg_num
+    reg_num = dst metadata 1 scale 1
+    db 0x01, reg_num
     dw value
 end macro
 
-macro halt? reg
+macro jmpi dst
+    db 0x2c, dst, 0x00, 0x00
+end macro
+
+macro halt
     db 0x00, 0x01, 0x00, 0x00
 end macro

@@ -1,3 +1,4 @@
 include 'nanocode.inc'
-movi r1, 10
-halt r2
+movi r1, 0
+jmpi 10
+halt 
