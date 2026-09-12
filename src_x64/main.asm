@@ -136,6 +136,28 @@ op_load16:
     mov word [r13 + rsi * 4], ax
     jmp fetch
 
+op_store32:
+    ; store [r], r
+    load_register rsi
+    load_register rdi
+    inc r12
+    xor rdx, rdx
+    mov edx, dword [r13 + rsi * 4]
+    mov eax, dword [r13 + rdi * 4]
+    mov dword [ram + edx], eax
+    jmp fetch
+
+op_load32:
+    ; load r, [r]
+    load_register rsi
+    load_register rdi
+    inc r12
+    xor rdx, rdx
+    mov edx, dword [r13 + rdi * 4]
+    mov eax, dword [ram + rdx]
+    mov dword [r13 + rsi * 4], eax
+    jmp fetch
+
 op_add:
     write STDOUT, add_msg, add_len
     ; rax = register in
@@ -589,20 +611,22 @@ halt:
 segment readable
 
 op_table:
-    dq halt         ; 0x00
-    dq movi         ; 0x01
+    dq halt
+    dq movi 
     dq movl
-    dq movr         ; 0x02
+    dq movr  
     dq op_store8
     dq op_load8
     dq op_store16
     dq op_load16
-    dq op_add       ; 0x03
-    dq op_sub       ; 0x04
-    dq op_mul       ; 0x05
-    dq op_div       ; 0x06
-    dq op_mod       ; 0x07
-    dq op_addi      ; 0x08
+    dq op_store32
+    dq op_load32
+    dq op_add 
+    dq op_sub
+    dq op_mul
+    dq op_div
+    dq op_mod
+    dq op_addi
     dq op_subi
     dq op_muli
     dq op_divi
