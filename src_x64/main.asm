@@ -398,6 +398,19 @@ op_jnz.no_jump:
     add r12, 2
     jmp fetch
 
+op_cmpi:
+    load_register rsi
+    mov bx, word [r12]
+    inc r12
+    ; Read
+    mov edx, dword [r13 + rsi * 4]
+    inc r12
+    cmp edx, ebx 
+    lahf
+    mov al, ah
+    mov r15b, al
+    jmp fetch
+
 op_jmpi:
     ; Fetch immediate 
     movzx rbx, word [r12]
@@ -458,6 +471,7 @@ op_table:
     dq op_jgt
     dq op_jz
     dq op_jnz
+    dq op_cmpi
     dq op_jmpi
 
 op_table_len = ($ - op_table) / 8 - 1 
@@ -493,6 +507,7 @@ halt_msg_len = $ - halt_msg
 nano_code:
     db 0x01, 1, 190, 0x00 ; movi r01, 2
     db 0x01, 2, 2, 0x00
-    db 27, 1, 2, 0x00 ; jnz r01, 1
+    db 28, 1, 190, 0       ; cmp r1, 190
+    db 22, 2, 0, 0 
     db 0x00, 1, 0, 0x00 ; halt r2 
 nano_code_len = $ - nano_code
