@@ -71,6 +71,15 @@ movi:
     ; exit rdi 
     jmp fetch
 
+movl:
+    load_register rax
+    inc r12
+    inc r12
+    mov edi, dword [r12]
+    add r12, 4
+    mov dword [r13 + rax * 4], edi
+    jmp fetch
+
 movr:
     write STDOUT, movr_msg, movr_len
     ; rax = register in
@@ -84,6 +93,28 @@ movr:
     mov dword [r13 + rax * 4], edx
     ; exit rdi 
     jmp fetch 
+
+op_store8:
+    ; store8 [r], r
+    load_register rsi
+    load_register rdi
+    xor rdx, rdx
+    mov edx, dword [r13 + rsi * 4]
+    mov al, byte [r13 + rdi * 4]
+    inc r12
+    mov byte [ram + rdx], al 
+    jmp fetch
+
+op_load8:
+    ; load8 r, [r]
+    load_register rsi
+    load_register rdi
+    inc r12
+    xor rdx, rdx
+    mov edx, dword [r13 + rdi * 4]
+    mov al, byte [ram + rdx]
+    mov byte [r13 + rsi * 4], al
+    jmp fetch
 
 op_add:
     write STDOUT, add_msg, add_len
@@ -495,7 +526,7 @@ op_jnzi:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
     cmp rax, 0
-    jz op_jnz.no_jump
+    jz op_jnzi.no_jump
 
     movzx rax, word [r12]
     shl rax, 2
@@ -540,7 +571,10 @@ segment readable
 op_table:
     dq halt         ; 0x00
     dq movi         ; 0x01
+    dq movl
     dq movr         ; 0x02
+    dq op_store8
+    dq op_load8
     dq op_add       ; 0x03
     dq op_sub       ; 0x04
     dq op_mul       ; 0x05
@@ -607,11 +641,10 @@ halt_msg_len = $ - halt_msg
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
 nano_code:
-    db 0x01, 1, 3, 0x00   ; movi r01, 2
-    db 28, 1, 0, 0        ; call r01
-    db 0x00, 29, 0, 0x00  ; halt r2 
-    ; function
-    db 0x01, 1, 190, 0x00 ; mov r01, 190
-    db 0x01, 3, 0, 0      ; mov r03, 0
-    db 29, 0, 0, 0        ; ret 
+    db 1, 1, 200, 0
+    db 1, 2, 5, 0
+    db 4, 2, 1, 0
+    db 1, 1, 100, 0
+    db 5, 1, 2, 0
+    db 0, 1, 0, 0
 nano_code_len = $ - nano_code
