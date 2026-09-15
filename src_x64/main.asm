@@ -43,6 +43,14 @@ segment readable executable
 entry start
 
 start:
+    ; Read the filename
+    mov rax, [rsp]
+    cmp rax, 2
+    jl file_missing
+    mov rsi, [rsp + 16]
+    ; Open the file
+
+
     mov r12, nano_code ; Instruction pointer
     mov r13, registers ; Registers pointer
 
@@ -635,6 +643,10 @@ address_not_aligned:
     write STDOUT, address_not_aligned_msg, address_not_aligned_len 
     exit 69
 
+file_missing:
+    write STDOUT, file_missing_msg, file_missing_msg_len
+    exit 69
+
 halt:
     ;write STDOUT, halt_msg, halt_msg_len
     movzx rax, byte [r12]
@@ -719,6 +731,9 @@ unknown_register_msg_len = $ - unknown_register_msg
 
 address_not_aligned_msg: db 'ERROR: address not aligned (4 bytes)', 10
 address_not_aligned_len = $ - address_not_aligned_msg
+
+file_missing_msg: db 'ERROR: File name is missing', 10 
+file_missing_msg_len = $ - file_missing_msg
 
 ;halt_msg: db 'Halt', 10
 ;halt_msg_len = $ - halt_msg 
