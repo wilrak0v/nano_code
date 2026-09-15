@@ -57,8 +57,26 @@ start:
     cmp rax, 0
     jl fail_open_file
     mov r14, rax
+    ; Get the file size
+    sub rsp, 144
+    mov rax, 5
+    mov rdi, r14
+    mov rsi, rsp
+    syscall
+    mov r13, [rsp + 48]
+    add rsp, 144
+    ; Allocate r13 bytes
+    mov rax, 9
+    mov rdi, 0
+    mov rsi, r13
+    mov rdx, 0x3
+    mov r10, 0x22
+    mov r8, -1
+    mov r9, 0
+    syscall
+    mov r11, rax
 
-    mov r12, nano_code ; Instruction pointer
+    mov r12, r11       ; Instruction pointer
     mov r13, registers ; Registers pointer
 
 fetch:
