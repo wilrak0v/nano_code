@@ -9,6 +9,11 @@ The AAarch64 use GNU AS so it's easy to compile with the Makefile.
 
 Feel free to contribute to this project.
 
+## Write programs for it
+This project don't have its own assembly for now, but it uses other assembly engine.
+
+The fasmg version isn't ready yet so you'll have to test with [customASM](https://github.com/hlorenzi/customasm/tree/main).
+
 ## Architecture
 The architecture is pretty simple. The main core is a fetch-decode-execute loop in ASM,
 which is more simpler than in C in my opinion (for this task).

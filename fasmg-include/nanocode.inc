@@ -1,27 +1,33 @@
-element Register
+r0 = 0
+r1 = 1
+r2 = 2
+r3 = 3
+r4 = 4
 
-element r0 : Register + 0
-element r1 : Register + 1
-element r2 : Register + 2
+macro movi dst*, value*
+    if dst < 0 or dst > 32
+        err "Unknown register"
+    end if
 
-macro movi dst*, value
-    local reg_num
-    reg_num = dst metadata 1 scale 1
-    db 0x01, reg_num
+    db 0x01, dst 
     dw value
 end macro
 
-macro movl dst*, value
-    local reg_num
-    reg_num = dst metadata 1 scale 1
-    db 0x02, reg_num, 0x00, 0x00
+macro movl dst*, value*
+    db 0x02, dst, 0x00, 0x00
     dd value
+end macro
+
+macro movr dst*, src*
+    db 0x03
+    db dst 
+    db src, 0x00
 end macro
 
 macro jmpi dst
     db 0x2c, dst, 0x00, 0x00
 end macro
 
-macro halt
-    db 0x00, 0x01, 0x00, 0x00
+macro halt dst*
+    db 0x00, dst, 0x00, 0x00
 end macro
