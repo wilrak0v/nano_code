@@ -49,7 +49,14 @@ start:
     jl file_missing
     mov rsi, [rsp + 16]
     ; Open the file
-
+    mov rax, 257
+    mov rdi, -100
+    mov rdx, 00000000q
+    mov r10, 0
+    syscall
+    cmp rax, 0
+    jl fail_open_file
+    mov r14, rax
 
     mov r12, nano_code ; Instruction pointer
     mov r13, registers ; Registers pointer
@@ -647,8 +654,14 @@ file_missing:
     write STDOUT, file_missing_msg, file_missing_msg_len
     exit 69
 
+fail_open_file:
+    write STDOUT, fail_open_file_msg, fail_open_file_msg_len
+    exit 69
+
 halt:
-    ;write STDOUT, halt_msg, halt_msg_len
+    ; Close the file
+    syscall1 3, r14
+    ; Exit
     movzx rax, byte [r12]
     cmp rax, number_registers
     ja unknown_register
@@ -734,6 +747,9 @@ address_not_aligned_len = $ - address_not_aligned_msg
 
 file_missing_msg: db 'ERROR: File name is missing', 10 
 file_missing_msg_len = $ - file_missing_msg
+
+fail_open_file_msg: db 'ERROR: Failed to open the file', 10
+fail_open_file_msg_len = $ - fail_open_file_msg
 
 ;halt_msg: db 'Halt', 10
 ;halt_msg_len = $ - halt_msg 
