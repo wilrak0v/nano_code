@@ -75,6 +75,14 @@ start:
     mov r9, 0
     syscall
     mov r11, rax
+    ; Read the file
+    mov rax, 0
+    mov rdi, r14
+    mov rsi, r11
+    mov rdx, r13
+    syscall
+    ; Close the file
+    syscall1 3, r14
 
     mov r12, r11       ; Instruction pointer
     mov r13, registers ; Registers pointer
@@ -88,7 +96,7 @@ fetch:
     jmp qword [op_table + rbx*8]
 
 movi:
-    ;write STDOUT, movi_msg, movi_len
+    ; write STDOUT, movi_msg, movi_len
     ; rax = register number
     load_register rax
     ; rdi = Immediate value
@@ -111,7 +119,7 @@ movl:
     jmp fetch
 
 movr:
-    ;write STDOUT, movr_msg, movr_len
+    ; write STDOUT, movr_msg, movr_len
     ; rax = register in
     load_register rax
     ; rdi = register out
@@ -268,7 +276,7 @@ op_mod:
 op_addi:
     load_register rax
     mov esi, dword [r13 + rax * 4]
-    mov bx, word [r12]
+    movzx ebx, word [r12]
     inc r12
     inc r12
     add esi, ebx
@@ -278,7 +286,7 @@ op_addi:
 op_subi:
     load_register rax
     mov esi, dword [r13 + rax * 4]
-    mov bx, word [r12]
+    movzx ebx, word [r12]
     inc r12
     inc r12
     sub esi, ebx
@@ -288,7 +296,7 @@ op_subi:
 op_muli:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    mov bx, word [r12]
+    movzx ebx, word [r12]
     inc r12
     inc r12
     mul ebx
@@ -298,7 +306,7 @@ op_muli:
 op_divi:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    mov bx, word [r12]
+    movzx ebx, word [r12]
     inc r12
     inc r12
     xor rdx, rdx
@@ -309,7 +317,7 @@ op_divi:
 op_modi:
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    mov bx, word [r12]
+    movzx ebx, word [r12]
     inc r12
     inc r12
     xor rdx, rdx
@@ -404,9 +412,9 @@ op_jmp:
     load_register rsi
     ; Read
     mov eax, dword [r13 + rsi * 4]
-    shl rax, 2
+    ;shl rax, 2
     ; Jump
-    add rax, nano_code
+    add rax, r11
     mov r12, rax 
     jmp fetch
 
@@ -416,9 +424,9 @@ op_je:
 
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    shl rax, 2
+    ;shl rax, 2
     ; Jump
-    add rax, nano_code
+    add rax, r11
     mov r12, rax
     jmp fetch
 op_je.no_jump:
@@ -431,9 +439,9 @@ op_jne:
 
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    shl rax, 2
+    ;shl rax, 2
     ; Jump
-    add rax, nano_code
+    add rax, r11
     mov r12, rax
     jmp fetch
 op_jne.no_jump:
@@ -446,8 +454,8 @@ op_jlt:
 
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11
     mov r12, rax
     jmp fetch
 op_jlt.no_jump:
@@ -460,8 +468,8 @@ op_jgt:
     
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11
     mov r12, rax
     jmp fetch
 op_jgt.no_jump:
@@ -477,8 +485,8 @@ op_jz:
 
     load_register rdi
     mov eax, dword [r13 + rdi * 4]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11 
     mov r12, rax
     jmp fetch
 op_jz.no_jump:
@@ -493,8 +501,8 @@ op_jnz:
 
     load_register rsi
     mov eax, dword [r13 + rsi * 4]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11
     mov r12, rax
     jmp fetch
 op_jnz.no_jump:
@@ -507,13 +515,13 @@ op_call:
     mov ebx, dword [r13 + rsi * 4]
 
     add r12, 3
-    sub r12, nano_code
+    sub r12, r11
     shr r12, 2
     mov dword [r13 + 29 * 4], r12d 
 
     mov eax, ebx
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11 
     mov r12, rax
     jmp fetch
 
@@ -521,8 +529,8 @@ op_ret:
     xor rax, rax
     mov eax, dword [r13 + 29 * 4]
     mov r12, rax
-    shl r12, 2
-    add r12, nano_code
+    ;shl r12, 2
+    add r12, r11
     jmp fetch
 
 op_cmpi:
@@ -543,9 +551,9 @@ op_jei:
     jz op_jei.no_jump
 
     movzx rax, word [r12]
-    shl rax, 2
+    ;shl rax, 2
     ; Jump
-    add rax, nano_code
+    add rax, r11 
     mov r12, rax
     jmp fetch
 op_jei.no_jump:
@@ -557,8 +565,8 @@ op_jli:
     jz op_jlt.no_jump
 
     movzx rax, word [r12]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11 
     mov r12, rax
     jmp fetch
 op_jli.no_jump:
@@ -570,8 +578,8 @@ op_jgi:
     jnz op_jgt.no_jump
     
     movzx rax, word [r12]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11 
     mov r12, rax
     jmp fetch
 op_jgi.no_jump:
@@ -586,8 +594,8 @@ op_jzi:
     jnz op_jz.no_jump
 
     movzx rax, word [r12]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11 
     mov r12, rax
     jmp fetch
 op_jzi.no_jump:
@@ -601,8 +609,8 @@ op_jnzi:
     jz op_jnzi.no_jump
 
     movzx rax, word [r12]
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11
     mov r12, rax
     jmp fetch
 op_jnzi.no_jump:
@@ -612,9 +620,9 @@ op_jnzi.no_jump:
 op_jmpi:
     ; Fetch immediate 
     movzx rbx, word [r12]
-    shl rbx, 2
+    ;shl rbx, 2
     ; change r12
-    add rbx, nano_code
+    add rbx, r11 
     mov r12, rbx
     jmp fetch
 
@@ -622,12 +630,12 @@ op_calli:
     ; call 16
     movzx rax, word [r12]
     add r12, 3
-    sub r12, nano_code 
-    shr r12, 2
-    mov [r13 + 29 * 4], r12b
+    sub r12, r11 
+    ;shr r12, 2
+    mov dword [r13 + 29 * 4], r12d
 
-    shl rax, 2
-    add rax, nano_code
+    ;shl rax, 2
+    add rax, r11 
     mov r12, rax
     jmp fetch
 
@@ -652,7 +660,7 @@ sys_print:
     mov edi, dword [r13 + 1 * 4]
     mov esi, dword [r13 + 2 * 4]
     mov edx, dword [r13 + 3 * 4]
-    add rsi, nano_code
+    add rsi, r11 
     syscall
     jmp fetch
 
@@ -677,8 +685,6 @@ fail_open_file:
     exit 69
 
 halt:
-    ; Close the file
-    syscall1 3, r14
     ; Exit
     movzx rax, byte [r12]
     cmp rax, number_registers
@@ -776,12 +782,5 @@ segment readable writable
 number_registers = 32 
 
 ; NANO_CODE (that's just a str to jump to it easily in VIM)
-nano_code:
-    db 1, STDOUT, 0, 0
-    db 1, 2, 20, 0
-    db 1, 3, 12, 0
-    db 45, 1, 0, 0
-    db 0, 2, 0, 0
-    db 'Hello World', 10
 ram rb 65536        ; 64ko for the RAM
 registers rb number_registers * 4 ; Each register is 32 bytes

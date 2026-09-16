@@ -1,22 +1,22 @@
 #include "nanocode.asm"
 
 start:
-    movl r0, 10000 
-    movi r1, 0
-    movi r2, 1
+    mov r0, 10000 
+    mov r1, 0
+    mov r2, 1
 
 loop:
-    cmpi r0, 1
-    jei [done]
+    cmp r0, 1
+    je done
 
-    movr r3, r1
+    mov r3, r1
     add r3, r2
 
-    movr r1, r2
-    movr r2, r3
+    mov r1, r2
+    mov r2, r3
 
-    subi r0, 1
-    jmpi [loop]
+    sub r0, 1
+    jmp loop
 
 done:
     halt r2
